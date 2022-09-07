@@ -1,1 +1,4 @@
-pandas
+pandas~=1.4.4
+google-auth
+google-cloud-bigquery
+PyYAML~=6.0
