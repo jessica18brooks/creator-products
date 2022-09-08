@@ -4,6 +4,7 @@ import logging
 
 import google.auth
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 
 def response_message(error, code, message):
@@ -32,7 +33,11 @@ def generate_schema(json_data):
 
 
 def upload_dataframe_to_bigquery(dataframe, variables):
-    bq_client = bigquery.Client()
+    credentials = service_account.Credentials.from_service_account_file(
+        variables['key_file'], scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+
+    bq_client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
     try:
         project_id = variables['project_id']
