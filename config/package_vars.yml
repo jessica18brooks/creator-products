@@ -1,3 +1,5 @@
 variables:
+  project_id : 'spheric-subject-361720'
   dataset_id: 'sales'
   table_id: 'products'
+  key_file: 'config/spheric-subject-361720-b71ec9eaec6e.json'
