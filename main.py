@@ -30,7 +30,7 @@ def load_file_into_dataframe(file):
     file_ref = os.path.join(__location__, file)
 
     if file_extension == '.csv':
-        return pd.read_csv(file_ref, encoding='cp437', index_col=0)
+        return pd.read_csv(file_ref, encoding='cp437')
     else:
         logging.warning(f'File type {file_extension} not supported yet')
         raise ValueError('File type not supported')

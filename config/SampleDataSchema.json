@@ -1,12 +1,12 @@
 [
-  {"name": "index", "type": "INT64", "mode": "NULLABLE"},
+  {"name": "Index", "type": "INT64", "mode": "NULLABLE"},
   {"name": "productName", "type": "STRING", "mode": "NULLABLE"},
-  {"name": "creator", "type": "STRING", "mode": "NULLABLE"},
-  {"name": "creatorId", "type": "INT64", "mode": "NULLABLE"},
-  {"name": "profit", "type": "NUMERIC", "mode": "NULLABLE"},
-  {"name": "revenue", "type": "NUMERIC", "mode": "NULLABLE"},
-  {"name": "cost", "type": "NUMERIC", "mode": "NULLABLE"},
+  {"name": "Creator", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "creatorID", "type": "INT64", "mode": "NULLABLE"},
+  {"name": "profit", "type": "FLOAT64", "mode": "NULLABLE"},
+  {"name": "revenue", "type": "FLOAT64", "mode": "NULLABLE"},
+  {"name": "cost", "type": "FLOAT64", "mode": "NULLABLE"},
   {"name": "location", "type": "STRING", "mode": "NULLABLE"},
   {"name": "category", "type": "STRING", "mode": "NULLABLE"},
-  {"name": "samplePerc", "type": "NUMERIC", "mode": "NULLABLE"}
+  {"name": "samplePerc", "type": "FLOAT64", "mode": "NULLABLE"}
 ]

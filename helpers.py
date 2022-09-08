@@ -53,6 +53,12 @@ def upload_dataframe_to_bigquery(dataframe, variables):
         return response_message(True, 400, 'No dataset_id defined in package_vars')
 
     try:
+        bq_client.create_dataset(dataset_ref, exists_ok=True)
+    except Exception as e:
+        logging.error(f'Failed to create BigQuery dataset {dataset_ref} with error {e.args}')
+        return response_message(True, 400, 'Failed to create BigQuery dataset')
+
+    try:
         table_ref = dataset_ref.table(variables['table_id'])
     except KeyError:
         logging.error(f'No table_id defined in package_vars')
@@ -79,10 +85,14 @@ def upload_dataframe_to_bigquery(dataframe, variables):
     job_config.skip_leading_rows = 1
     job_config.write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE
 
-    job = bq_client.load_table_from_dataframe(
-        dataframe, table, job_config=job_config
-    )
-    job.result()  # Wait for the job to complete.
+    try:
+        job = bq_client.load_table_from_dataframe(
+            dataframe, table, job_config=job_config
+        )
+        job.result()  # Wait for the job to complete.
+    except ValueError as ve:
+        logging.error(f'Failed to load Dataframe into BigQuery table {table_ref} with error {ve.args}')
+        return response_message(True, 400, 'Failed to load data into BigQuery table')
 
     table = bq_client.get_table(table_ref)
     logging.info(f'Loaded {table.num_rows} rows and {len(table.schema)} columns to {table_ref}')
