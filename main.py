@@ -3,7 +3,10 @@ import argparse
 import os
 import logging
 
-from helpers import read_yaml, response_message, upload_dataframe_to_bigquery
+import google.auth
+from google.cloud import bigquery
+from google.oauth2 import service_account
+from helpers import read_yaml, response_message, upload_dataframe_to_bigquery, create_aggregated_table
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -17,7 +20,12 @@ def main(text_file):
         logging.error(response_message(True, 422, ve))
         return response_message(True, 422, ve)
 
-    upload_dataframe_to_bigquery(df, config)
+    project_id = get_project_id(config)
+    bq_client = create_bq_client(config['key_file'])
+
+    upload_dataframe_to_bigquery(project_id, bq_client, df, config)
+
+    create_aggregated_table(project_id, bq_client, config)
     return response_message(False, 200, 'Successfully uploaded data to BigQuery')
 
 
@@ -34,6 +42,24 @@ def load_file_into_dataframe(file):
     else:
         logging.warning(f'File type {file_extension} not supported yet')
         raise ValueError('File type not supported')
+
+
+def get_project_id(variables):
+    try:
+        project_id = variables['project_id']
+    except KeyError:
+        _, project_id = google.auth.default()
+
+    logging.debug(f'Running in project {project_id}')
+    return project_id
+
+
+def create_bq_client(key_file):
+    credentials = service_account.Credentials.from_service_account_file(
+        key_file, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+
+    return bigquery.Client(credentials=credentials, project=credentials.project_id)
 
 
 if __name__ == '__main__':

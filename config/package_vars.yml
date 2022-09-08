@@ -1,5 +1,6 @@
 variables:
   project_id : 'spheric-subject-361720'
   dataset_id: 'sales'
-  table_id: 'products'
+  source_table_id: 'products'
+  query_table_id: 'creator_metrics'
   key_file: 'config/spheric-subject-361720-b71ec9eaec6e.json'
