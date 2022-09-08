@@ -2,9 +2,7 @@ import json
 import yaml
 import logging
 
-import google.auth
 from google.cloud import bigquery
-from google.oauth2 import service_account
 
 
 def response_message(error, code, message):
@@ -32,19 +30,7 @@ def generate_schema(json_data):
     return schema_array
 
 
-def upload_dataframe_to_bigquery(dataframe, variables):
-    credentials = service_account.Credentials.from_service_account_file(
-        variables['key_file'], scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-
-    bq_client = bigquery.Client(credentials=credentials, project=credentials.project_id)
-
-    try:
-        project_id = variables['project_id']
-    except KeyError:
-        _, project_id = google.auth.default()
-
-    logging.debug(f'Loading to project {project_id}')
+def upload_dataframe_to_bigquery(project_id, bq_client, dataframe, variables):
 
     try:
         dataset_ref = bigquery.DatasetReference(project_id, variables['dataset_id'])
@@ -59,7 +45,7 @@ def upload_dataframe_to_bigquery(dataframe, variables):
         return response_message(True, 400, 'Failed to create BigQuery dataset')
 
     try:
-        table_ref = dataset_ref.table(variables['table_id'])
+        table_ref = dataset_ref.table(variables['source_table_id'])
     except KeyError:
         logging.error(f'No table_id defined in package_vars')
         return response_message(True, 400, 'No table_id defined in package_vars')
@@ -96,3 +82,24 @@ def upload_dataframe_to_bigquery(dataframe, variables):
 
     table = bq_client.get_table(table_ref)
     logging.info(f'Loaded {table.num_rows} rows and {len(table.schema)} columns to {table_ref}')
+
+
+def create_aggregated_table(project_id, bq_client, variables):
+    table_id = f'{project_id}.{variables["dataset_id"]}.{variables["query_table_id"]}'
+    job_config = bigquery.QueryJobConfig(destination=table_id)
+    job_config.write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE
+
+    sql = """
+    SELECT Creator AS creator, 
+      SUM(revenue) AS total_revenue, 
+      COUNT(DISTINCT productName) AS number_different_products, 
+      COUNT(productName) AS total_products_sold,
+      SUM(profit) AS total_profits
+    FROM `spheric-subject-361720.sales.products` 
+    GROUP BY 1
+    """
+
+    query_job = bq_client.query(sql, job_config=job_config)
+    query_job.result()  # Wait for the job to complete.
+
+    logging.info(f'Query results loaded to the table {table_id}')
